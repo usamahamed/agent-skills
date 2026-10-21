@@ -1804,9 +1804,7 @@ Reference: [Glimmer Tracking](https://guides.emberjs.com/release/in-depth-topics
 
 **Impact: HIGH (Enforces consistent component structure and predictable imports)**
 
-Follow modern Ember component file conventions: use `.gjs`/`.gts` files with `<template>` tags (never `.hbs` files), use kebab-case filenames, match class names to file names (in PascalCase), do not use the `Component` suffix in class names, and avoid `export default` in .gjs/.gts component files.
-
-This export guidance applies to `.gjs`/`.gts` component files only. If your app still uses `.hbs`, keep default exports for resolver-facing invokables used there (or use a named export plus default alias in hybrid codebases).
+Follow modern Ember component file conventions: use `.gjs`/`.gts` files with `<template>` tags (never `.hbs` files), use kebab-case filenames, match class names to file names (in PascalCase), do not use the `Component` suffix in class names, and export the component as the module's default export.
 
 **Incorrect:**
 
@@ -1821,7 +1819,7 @@ This export guidance applies to `.gjs`/`.gts` component files only. If your app 
 // app/components/user-card.js - WRONG: Separate .js and .hbs files
 import Component from '@glimmer/component';
 
-export class UserCard extends Component {
+export default class UserCard extends Component {
   // Logic here
 }
 ```
@@ -1830,7 +1828,7 @@ export class UserCard extends Component {
 // app/components/user-card.gjs - WRONG: Component suffix
 import Component from '@glimmer/component';
 
-export class UserCardComponent extends Component {
+export default class UserCardComponent extends Component {
   <template>
     <div class="user-card">
       {{@name}}
@@ -1843,7 +1841,7 @@ export class UserCardComponent extends Component {
 // app/components/UserProfile.gjs - WRONG: PascalCase filename
 import Component from '@glimmer/component';
 
-export class UserProfile extends Component {
+export default class UserProfile extends Component {
   <template>
     <div class="profile">
       {{@name}}
@@ -1855,10 +1853,10 @@ export class UserProfile extends Component {
 **Correct:**
 
 ```glimmer-js
-// app/components/user-card.gjs - CORRECT: kebab-case filename, no Component suffix, no default export
+// app/components/user-card.gjs - CORRECT: kebab-case filename, no Component suffix
 import Component from '@glimmer/component';
 
-export class UserCard extends Component {
+export default class UserCard extends Component {
   <template>
     <div class="user-card">
       {{@name}}
@@ -1872,7 +1870,7 @@ export class UserCard extends Component {
 import Component from '@glimmer/component';
 import { service } from '@ember/service';
 
-export class UserProfile extends Component {
+export default class UserProfile extends Component {
   @service session;
 
   <template>
@@ -1914,15 +1912,15 @@ export class UserProfile extends Component {
 
 - Cleaner code: `UserCard` vs `UserCardComponent`
 
-**No default export:**
+**Default export:**
 
-- Modern .gjs/.gts files don't need `export default`
+- Nothing exports a class for you: `<template>` inside a class body compiles into that class, and the module exports only what you `export`
 
-- The template compiler automatically exports the component
+- The resolver looks components up by the module's default export, so `<UserCard />` in a loose-mode template, `{{component "user-card"}}` and `owner.lookup('component:user-card')` only find a default-exported class
 
-- Simpler syntax, less boilerplate
+- Template-only `.gjs` files get an implicit default export; a class is never exported implicitly
 
-- Consistent with strict-mode semantics
+- Strict-mode consumers can still `import UserCard from './user-card'`
 
 | Filename              | Class Name             | Template Invocation  |
 
@@ -1963,7 +1961,7 @@ export class UserProfile extends Component {
 // app/components/ui/button.gjs
 import Component from '@glimmer/component';
 
-export class Button extends Component {
+export default class Button extends Component {
   <template>
     <button type="button">
       {{yield}}
@@ -1980,7 +1978,7 @@ export class Button extends Component {
 // app/components/admin/user/profile-card.gjs
 import Component from '@glimmer/component';
 
-export class ProfileCard extends Component {
+export default class ProfileCard extends Component {
   <template>
     <div class="admin-profile">
       {{@user.name}}
@@ -1999,8 +1997,6 @@ export class ProfileCard extends Component {
 
 - 🌐 Follows web standards (kebab-case)
 
-- 📦 Smaller bundle size (less export overhead)
-
 - 🚀 Better alignment with modern Ember/Glimmer
 
 **Negative:**
@@ -2008,8 +2004,6 @@ export class ProfileCard extends Component {
 - None - this is the modern standard
 
 - **Code clarity**: +30% (shorter, clearer names)
-
-- **Bundle size**: -5-10 bytes per component (no export overhead)
 
 - **Developer experience**: Improved (predictable naming)
 
