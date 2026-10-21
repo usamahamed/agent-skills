@@ -1768,18 +1768,19 @@ class FilteredList extends Component {
     return this.searchTerm || this.selectedCategory !== 'all';
   }
 
+  updateSearchTerm = (event) => {
+    this.searchTerm = event.target.value;
+  };
+
+  updateCategory = (event) => {
+    this.selectedCategory = event.target.value;
+  };
+
   <template>
     <div class="filtered-list">
-      <input
-        type="search"
-        value={{this.searchTerm}}
-        {{on "input" (pick "target.value" (set this "searchTerm"))}}
-      />
+      <input type="search" value={{this.searchTerm}} {{on "input" this.updateSearchTerm}} />
 
-      <select
-        value={{this.selectedCategory}}
-        {{on "change" (pick "target.value" (set this "selectedCategory"))}}
-      >
+      <select value={{this.selectedCategory}} {{on "change" this.updateCategory}}>
         <option value="all">All Categories</option>
         {{#each @categories as |cat|}}
           <option value={{cat}}>{{cat}}</option>
@@ -2844,6 +2845,8 @@ class FormContainer extends Component {
     this.validate(field, value);
   };
 
+  updateFirstName = (event) => this.updateField('firstName', event.target.value);
+
   validate(field, value) {
     if (field === 'email' && !value.includes('@')) {
       this.errors.email = 'Invalid email';
@@ -2854,10 +2857,7 @@ class FormContainer extends Component {
 
   <template>
     <form>
-      <input
-        value={{this.formData.firstName}}
-        {{on "input" (pick "target.value" (fn this.updateField "firstName"))}}
-      />
+      <input value={{this.formData.firstName}} {{on "input" this.updateFirstName}} />
 
       <button disabled={{not this.canSubmit}}>
         Submit
@@ -10032,7 +10032,6 @@ class UserProfile extends Component {
 import Component from '@glimmer/component';
 import { restartableTask, timeout } from 'ember-concurrency';
 import { on } from '@ember/modifier';
-import { pick } from 'ember-composable-helpers';
 
 class Search extends Component {
   // CORRECT: For user-initiated search with debouncing
@@ -10043,8 +10042,10 @@ class Search extends Component {
     return response.json(); // Return value, don't set tracked state
   });
 
+  search = (event) => this.searchTask.perform(event.target.value);
+
   <template>
-    <input type="search" {{on "input" (fn this.searchTask.perform (pick "target.value"))}} />
+    <input type="search" {{on "input" this.search}} />
 
     {{! Use derived data from task state - no tracked properties needed }}
     {{#if this.searchTask.isRunning}}
@@ -10270,8 +10271,10 @@ class Search extends Component {
     return response.json(); // Return, don't set @tracked
   });
 
+  search = (event) => this.searchTask.perform(event.target.value);
+
   <template>
-    <input {{on "input" (fn this.searchTask.perform (pick "target.value"))}} />
+    <input {{on "input" this.search}} />
 
     {{#if this.searchTask.isRunning}}
       <div class="loading">Loading...</div>
@@ -10308,12 +10311,10 @@ class Autocomplete extends Component {
     return response.json(); // Return value, don't set tracked state
   });
 
+  search = (event) => this.searchTask.perform(event.target.value);
+
   <template>
-    <input
-      type="search"
-      {{on "input" (fn this.searchTask.perform (pick "target.value"))}}
-      placeholder="Search..."
-    />
+    <input type="search" {{on "input" this.search}} placeholder="Search..." />
 
     {{#if this.searchTask.isRunning}}
       <div class="spinner"></div>
